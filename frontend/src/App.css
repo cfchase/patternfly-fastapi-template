@@ -1,0 +1,73 @@
+.App {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.container {
+  margin-top: 2rem;
+}
+
+.health-section {
+  background: #f5f5f5;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.health-section h2 {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.health-section button {
+  padding: 0.75rem 1.5rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  min-width: 150px;
+}
+
+.health-section button:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.health-section button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.health-result {
+  padding: 1rem;
+  border-radius: 4px;
+  text-align: left;
+  margin-top: 1rem;
+}
+
+.health-result.success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.health-result.error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.health-result h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.health-result p {
+  margin: 0;
+  font-size: 0.95rem;
+}

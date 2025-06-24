@@ -26,7 +26,6 @@ spec:
     name: backend
   port:
     targetPort: http
-  path: /api
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect

@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - ../../base
 
-namespace: react-fastapi-prod
+namespace: patternfly-fastapi-prod
 
 commonLabels:
   environment: production
@@ -19,7 +19,7 @@ replicas:
     count: 2
 
 images:
-  - name: quay.io/cfchase/react-fastapi-backend
+  - name: quay.io/cfchase/patternfly-fastapi-backend
     newTag: prod
-  - name: quay.io/cfchase/react-fastapi-frontend
+  - name: quay.io/cfchase/patternfly-fastapi-frontend
     newTag: prod

@@ -8,7 +8,7 @@ set -e
 # Default values
 TAG=${1:-latest}
 REGISTRY=${2:-quay.io/cfchase}
-PROJECT_NAME="react-fastapi"
+PROJECT_NAME="patternfly-fastapi"
 
 echo "Building images with tag: $TAG"
 echo "Registry: $REGISTRY"

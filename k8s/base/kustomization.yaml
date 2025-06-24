@@ -9,11 +9,11 @@ resources:
   - route.yaml
 
 commonLabels:
-  app.kubernetes.io/name: react-fastapi-template
+  app.kubernetes.io/name: patternfly-fastapi-template
   app.kubernetes.io/version: "1.0.0"
 
 images:
-  - name: quay.io/cfchase/react-fastapi-backend
+  - name: quay.io/cfchase/patternfly-fastapi-backend
     newTag: latest
-  - name: quay.io/cfchase/react-fastapi-frontend
+  - name: quay.io/cfchase/patternfly-fastapi-frontend
     newTag: latest

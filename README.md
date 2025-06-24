@@ -38,7 +38,7 @@ A full-stack application template with React frontend (Vite) using PatternFly an
    
    # Or run separately
    make dev-backend   # Backend on http://localhost:8000
-   make dev-frontend  # Frontend on http://localhost:3000
+   make dev-frontend  # Frontend on http://localhost:8080
    
    # Alternative npm commands
    npm run dev        # Run both

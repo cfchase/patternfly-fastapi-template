@@ -29,7 +29,7 @@ This is a React FastAPI template for building full-stack applications with React
 ```bash
 make setup             # Install all dependencies
 make dev              # Run both frontend and backend
-make dev-frontend     # Run React dev server (port 3000)
+make dev-frontend     # Run React dev server (port 8080)
 make dev-backend      # Run FastAPI server (port 8000)
 make help             # Show all available commands
 ```

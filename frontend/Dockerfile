@@ -33,6 +33,6 @@ RUN chgrp -R 0 /usr/share/nginx/html && \
     chgrp 0 /var/run/nginx.pid && \
     chmod g=u /var/run/nginx.pid
 
-EXPOSE 3000
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]

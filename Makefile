@@ -104,7 +104,7 @@ health-backend: ## Check backend health
 
 health-frontend: ## Check if frontend is running
 	@echo "Checking frontend..."
-	@curl -f http://localhost:3000 || echo "Frontend not responding"
+	@curl -f http://localhost:8080 || echo "Frontend not responding"
 
 # Cleanup
 clean: ## Clean build artifacts and dependencies

@@ -1,5 +1,18 @@
 import { useState } from 'react'
 import axios from 'axios'
+import {
+  Page,
+  PageSection,
+  PageSectionVariants,
+  Title,
+  Button,
+  Card,
+  CardTitle,
+  CardBody,
+  Alert,
+  Spinner
+} from '@patternfly/react-core'
+import { CheckCircleIcon, ExclamationTriangleIcon } from '@patternfly/react-icons'
 import './App.css'
 
 interface HealthResponse {
@@ -28,32 +41,55 @@ function App() {
   }
 
   return (
-    <div className="App">
-      <h1>React FastAPI Template</h1>
+    <Page>
+      <PageSection variant={PageSectionVariants.default}>
+        <Title headingLevel="h1" size="2xl">
+          PatternFly FastAPI Template
+        </Title>
+      </PageSection>
       
-      <div className="container">
-        <div className="health-section">
-          <h2>Backend Health Check</h2>
-          <button onClick={checkHealth} disabled={loading}>
-            {loading ? 'Checking...' : 'Check Backend Health'}
-          </button>
-          
-          {healthStatus && (
-            <div className="health-result success">
-              <h3>Status: {healthStatus.status}</h3>
-              <p>{healthStatus.message}</p>
-            </div>
-          )}
-          
-          {error && (
-            <div className="health-result error">
-              <h3>Error</h3>
-              <p>{error}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+      <PageSection>
+        <Card>
+          <CardTitle>
+            <Title headingLevel="h2" size="xl">
+              Backend Health Check
+            </Title>
+          </CardTitle>
+          <CardBody>
+            <Button
+              variant="primary"
+              onClick={checkHealth}
+              isDisabled={loading}
+              icon={loading ? <Spinner size="sm" /> : undefined}
+            >
+              {loading ? 'Checking...' : 'Check Backend Health'}
+            </Button>
+            
+            {healthStatus && (
+              <Alert
+                variant="success"
+                title={`Status: ${healthStatus.status}`}
+                customIcon={<CheckCircleIcon />}
+                style={{ marginTop: '16px' }}
+              >
+                {healthStatus.message}
+              </Alert>
+            )}
+            
+            {error && (
+              <Alert
+                variant="danger"
+                title="Error"
+                customIcon={<ExclamationTriangleIcon />}
+                style={{ marginTop: '16px' }}
+              >
+                {error}
+              </Alert>
+            )}
+          </CardBody>
+        </Card>
+      </PageSection>
+    </Page>
   )
 }
 

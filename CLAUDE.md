@@ -141,3 +141,11 @@ The FastAPI backend provides:
 - Add API endpoints in `backend/main.py`
 - Update frontend components in `frontend/src/`
 - The template provides a minimal foundation - add your business logic as needed
+
+## Git Commit Guidelines
+
+When creating git commits:
+- Use clear, descriptive commit messages
+- Follow conventional commit format when appropriate
+- Do NOT include any AI assistant attribution or co-authorship
+- Keep commit messages focused on the actual changes made

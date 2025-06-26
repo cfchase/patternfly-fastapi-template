@@ -16,7 +16,7 @@ import {
   PageSidebarBody,
   SkipToContent,
 } from '@patternfly/react-core';
-import { IAppRoute, IAppRouteGroup, routes } from '@app/routes';
+import { IAppRoute, IAppRouteGroup, routes } from '@app/routeConfig';
 import { BarsIcon } from '@patternfly/react-icons';
 
 interface IAppLayout {

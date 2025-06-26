@@ -16,8 +16,7 @@ export interface ISupportProps {
   sampleProp?: string;
 }
 
-// eslint-disable-next-line prefer-const
-let Support: React.FunctionComponent<ISupportProps> = () => (
+const Support: React.FunctionComponent<ISupportProps> = () => (
   <PageSection hasBodyWrapper={false}>
     <EmptyState variant={EmptyStateVariant.full} titleText="Empty State (Stub Support Module)" icon={CubesIcon}>
       <EmptyStateBody>

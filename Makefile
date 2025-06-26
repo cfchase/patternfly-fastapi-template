@@ -51,11 +51,20 @@ build-prod: build-frontend ## Build frontend and container images for production
 	./scripts/build-images.sh prod $(REGISTRY)
 
 # Testing
-test: ## Run tests
+test: ## Run all tests (frontend and backend)
+	@echo "Running frontend tests..."
 	cd frontend && npm run test
+	@echo "Running backend tests..."
+	cd backend && pytest
 
 test-frontend: ## Run frontend tests
 	cd frontend && npm run test
+
+test-backend: ## Run backend tests
+	cd backend && pytest
+
+test-backend-verbose: ## Run backend tests with verbose output
+	cd backend && pytest -v
 
 lint: ## Run linting on frontend
 	cd frontend && npm run lint
@@ -100,7 +109,7 @@ env-setup: ## Copy environment example files
 # Health Checks
 health-backend: ## Check backend health
 	@echo "Checking backend health..."
-	@curl -f http://localhost:8000/api/health || echo "Backend not responding"
+	@curl -f http://localhost:8000/api/v1/utils/health-check || echo "Backend not responding"
 
 health-frontend: ## Check if frontend is running
 	@echo "Checking frontend..."

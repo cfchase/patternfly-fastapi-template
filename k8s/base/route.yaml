@@ -13,19 +13,3 @@ spec:
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
----
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: backend-route
-  labels:
-    app: backend
-spec:
-  to:
-    kind: Service
-    name: backend
-  port:
-    targetPort: http
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect

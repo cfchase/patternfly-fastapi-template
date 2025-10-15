@@ -11,7 +11,7 @@ This is a React FastAPI template for building full-stack applications with React
 ```
 ├── backend/              # FastAPI backend
 │   ├── main.py          # Main FastAPI application
-│   ├── requirements.txt # Python dependencies
+│   ├── pyproject.toml   # Python dependencies (managed by uv)
 │   └── Dockerfile       # Backend container
 ├── frontend/            # React frontend with Vite
 │   ├── src/            # React source code
@@ -47,13 +47,15 @@ make lint             # Run linting
 
 ### Container Registry (Quay.io)
 ```bash
-make build                           # Build frontend and container images (default: latest)
-make push                            # Push images only (default: latest)
-make build-prod                      # Build with prod tag (for production deployment)
-make push-prod                       # Push with prod tag
-make build TAG=latest                # Build with latest tag (explicit)
-make push TAG=latest                 # Push with latest tag (explicit)
-make TAG=v1.0.0 REGISTRY=quay.io/cfchase # Custom registry and tag
+make build                                      # Build frontend and container images (default: latest)
+make push                                       # Push images only (default: latest)
+make build-prod                                 # Build with prod tag (for production deployment)
+make push-prod                                  # Push with prod tag
+make build TAG=latest                           # Build with latest tag (explicit)
+make push TAG=latest                            # Push with latest tag (explicit)
+make TAG=v1.0.0 REGISTRY=quay.io/cfchase       # Custom registry and tag
+make CONTAINER_TOOL=podman build               # Use podman instead of docker
+make TAG=v1.0.0 CONTAINER_TOOL=podman build    # Combine options
 ```
 
 **Important**: The k8s overlays expect specific image tags:
@@ -90,6 +92,7 @@ make kustomize-prod   # Preview prod manifests
 - Uvicorn as ASGI server
 - CORS middleware for frontend integration
 - Minimal API with only health check endpoint at `/api/health`
+- UV package manager for fast, reliable dependency management
 
 ### Deployment
 - Docker containers for both services
@@ -129,7 +132,7 @@ The FastAPI backend provides:
 
 ### Adding New Dependencies
 - Frontend: `cd frontend && npm install <package>`
-- Backend: Add to `backend/requirements.txt`
+- Backend: `cd backend && uv add <package>` (automatically updates pyproject.toml and uv.lock)
 
 ### Updating Container Images
 - Update image tags in `k8s/base/kustomization.yaml`

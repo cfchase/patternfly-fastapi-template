@@ -3,6 +3,7 @@
 # Container Registry Operations
 REGISTRY ?= quay.io/cfchase
 TAG ?= latest
+CONTAINER_TOOL ?= docker
 
 
 .PHONY: help setup dev build build-prod test clean push push-prod deploy deploy-prod undeploy undeploy-prod kustomize kustomize-prod
@@ -18,14 +19,14 @@ setup: ## Install all dependencies
 	@echo "Installing frontend dependencies..."
 	cd frontend && npm install
 	@echo "Installing backend dependencies..."
-	cd backend && pip install -r requirements.txt
+	cd backend && uv sync
 	@echo "Setup complete!"
 
 setup-frontend: ## Install frontend dependencies only
 	cd frontend && npm install
 
 setup-backend: ## Install backend dependencies only
-	cd backend && pip install -r requirements.txt
+	cd backend && uv sync
 
 # Development
 dev: ## Run both frontend and backend in development mode
@@ -36,46 +37,52 @@ dev-frontend: ## Run frontend development server
 	cd frontend && npm run dev
 
 dev-backend: ## Run backend development server
-	cd backend && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+	cd backend && uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 # Building
 build-frontend: ## Build frontend for production
 	cd frontend && npm run build
 
 build: build-frontend ## Build frontend and container images
-	@echo "Building container images for $(REGISTRY) with tag $(TAG)..."
-	./scripts/build-images.sh $(TAG) $(REGISTRY)
+	@echo "Building container images for $(REGISTRY) with tag $(TAG) using $(CONTAINER_TOOL)..."
+	./scripts/build-images.sh $(TAG) $(REGISTRY) $(CONTAINER_TOOL)
 
 build-prod: build-frontend ## Build frontend and container images for production
-	@echo "Building container images for $(REGISTRY) with tag prod..."
-	./scripts/build-images.sh prod $(REGISTRY)
+	@echo "Building container images for $(REGISTRY) with tag prod using $(CONTAINER_TOOL)..."
+	./scripts/build-images.sh prod $(REGISTRY) $(CONTAINER_TOOL)
 
 # Testing
 test: ## Run all tests (frontend and backend)
 	@echo "Running frontend tests..."
 	cd frontend && npm run test
 	@echo "Running backend tests..."
-	cd backend && pytest
+	cd backend && uv run pytest
 
 test-frontend: ## Run frontend tests
 	cd frontend && npm run test
 
 test-backend: ## Run backend tests
-	cd backend && pytest
+	cd backend && uv run pytest
 
 test-backend-verbose: ## Run backend tests with verbose output
-	cd backend && pytest -v
+	cd backend && uv run pytest -v
+
+test-backend-coverage: ## Run backend tests with coverage
+	cd backend && uv run pytest --cov=app --cov-report=term-missing
+
+test-backend-watch: ## Run backend tests in watch mode
+	cd backend && uv run pytest --watch
 
 lint: ## Run linting on frontend
 	cd frontend && npm run lint
 
 push: ## Push container images to registry
-	@echo "Pushing images to $(REGISTRY) with tag $(TAG)..."
-	./scripts/push-images.sh $(TAG) $(REGISTRY)
+	@echo "Pushing images to $(REGISTRY) with tag $(TAG) using $(CONTAINER_TOOL)..."
+	./scripts/push-images.sh $(TAG) $(REGISTRY) $(CONTAINER_TOOL)
 
 push-prod: ## Push container images to registry with prod tag
-	@echo "Pushing images to $(REGISTRY) with tag prod..."
-	./scripts/push-images.sh prod $(REGISTRY)
+	@echo "Pushing images to $(REGISTRY) with tag prod using $(CONTAINER_TOOL)..."
+	./scripts/push-images.sh prod $(REGISTRY) $(CONTAINER_TOOL)
 
 # OpenShift/Kubernetes Deployment
 kustomize: ## Preview development deployment manifests

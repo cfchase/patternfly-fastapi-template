@@ -4,146 +4,186 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a React FastAPI template for building full-stack applications with React frontend (Vite) and FastAPI backend, designed for deployment to OpenShift using Docker containers and Kustomize.
+Web application template with React frontend using PatternFly design system and FastAPI REST API backend, designed for OpenShift deployment via Kustomize.
 
 ## Project Structure
 
 ```
-├── backend/              # FastAPI backend
-│   ├── main.py          # Main FastAPI application
-│   ├── pyproject.toml   # Python dependencies (managed by uv)
-│   └── Dockerfile       # Backend container
-├── frontend/            # React frontend with Vite
-│   ├── src/            # React source code
-│   ├── package.json    # Node.js dependencies
-│   └── Dockerfile      # Frontend container
-├── k8s/                # Kubernetes/OpenShift manifests
-│   ├── base/          # Base kustomize resources
-│   └── overlays/      # Environment-specific overlays
-└── scripts/           # Deployment automation scripts
+├── backend/
+│   ├── app/api/routes/v1/    # Versioned API routes
+│   ├── main.py               # FastAPI app with CORS middleware
+│   ├── pyproject.toml        # Python dependencies (managed by uv)
+│   └── Dockerfile            # Backend container
+├── frontend/
+│   ├── src/app/              # React components and layouts
+│   │   ├── AppLayout/        # Main layout with PatternFly Masthead & PageSidebar
+│   │   ├── Dashboard/        # Example dashboard with health check
+│   │   └── Settings/         # Settings pages (General, Profile)
+│   ├── vite.config.ts        # Vite config with /api proxy and path aliases
+│   ├── nginx.conf            # Production proxy config
+│   └── Dockerfile            # Multi-stage build (Node → Nginx)
+├── k8s/
+│   ├── base/                 # Base kustomize resources
+│   └── overlays/{dev,prod}/  # Environment-specific patches
+└── scripts/                  # Build and deployment automation
 ```
 
 ## Development Commands
 
-### Local Development (Node.js/Python)
+### Local Development
 ```bash
 make setup             # Install all dependencies
-make dev              # Run both frontend and backend
-make dev-frontend     # Run React dev server (port 8080)
-make dev-backend      # Run FastAPI server (port 8000)
-make help             # Show all available commands
-```
-
-### Building
-```bash
-make build                 # Build frontend and container images
+make dev              # Run both frontend (8080) and backend (8000)
+make dev-frontend     # Run React dev server only
+make dev-backend      # Run FastAPI server only
 ```
 
 ### Testing
 ```bash
-make test             # Run frontend tests
-make lint             # Run linting
+make test                      # Run all tests (frontend + backend)
+make test-frontend             # Run frontend Vitest tests once
+cd frontend && npm run test:watch  # Run frontend tests in watch mode
+make test-backend              # Run backend pytest
+make test-backend-verbose      # Run backend pytest with -v
+make lint                      # Run frontend ESLint
+cd frontend && npm run typecheck   # TypeScript type checking
 ```
 
-### Container Registry (Quay.io)
+### Building and Deployment
 ```bash
-make build                                      # Build frontend and container images (default: latest)
-make push                                       # Push images only (default: latest)
-make build-prod                                 # Build with prod tag (for production deployment)
-make push-prod                                  # Push with prod tag
-make build TAG=latest                           # Build with latest tag (explicit)
-make push TAG=latest                            # Push with latest tag (explicit)
-make TAG=v1.0.0 REGISTRY=quay.io/cfchase       # Custom registry and tag
-make CONTAINER_TOOL=podman build               # Use podman instead of docker
-make TAG=v1.0.0 CONTAINER_TOOL=podman build    # Combine options
+# Build container images
+make build                                      # Build with 'latest' tag
+make build-prod                                 # Build with 'prod' tag
+make TAG=v1.0.0 build                           # Build with custom tag
+make CONTAINER_TOOL=podman build                # Use podman instead of docker
+make TAG=v1.0.0 CONTAINER_TOOL=podman build     # Combine options
+
+# Push to registry (default: quay.io/cfchase)
+make push                  # Push 'latest' tag
+make push-prod             # Push 'prod' tag
+
+# Deploy to OpenShift
+make deploy                # Deploy to dev (requires 'latest' tag)
+make deploy-prod           # Deploy to prod (requires 'prod' tag)
+make kustomize             # Preview dev manifests
+make undeploy              # Remove dev deployment
 ```
 
-**Important**: The k8s overlays expect specific image tags:
-- Development environment uses `latest` tag (default)
-- Production environment requires `prod` tag
-
-### OpenShift Deployment
-```bash
-# First build and push images with correct tags
-make build && make push                     # For development (uses latest tag)
-make build-prod && make push-prod           # For production
-
-# Then deploy
-make deploy           # Deploy to development
-make deploy-prod      # Deploy to production
-make undeploy         # Remove development deployment
-make undeploy-prod    # Remove production deployment
-make kustomize        # Preview dev manifests
-make kustomize-prod   # Preview prod manifests
-```
+**Important**: K8s overlays expect specific image tags:
+- Development: `latest` (default)
+- Production: `prod`
 
 ## Architecture
 
-### Frontend (React + Vite)
-- TypeScript for type safety
-- Vite for fast development and building
-- Axios for API communication
-- Simple UI with health check button
-- Vite dev server proxies /api/ to backend (local dev)
-- Nginx proxies /api/ to backend service (production)
+### Frontend (React + PatternFly + Vite)
 
-### Backend (FastAPI)
-- Python 3.11 with FastAPI framework
-- Uvicorn as ASGI server
-- CORS middleware for frontend integration
-- Minimal API with only health check endpoint at `/api/health`
-- UV package manager for fast, reliable dependency management
+**Stack**: React 18.3 with TypeScript, PatternFly 6.x, Vite 7.x, React Router 7.x
 
-### Deployment
-- Docker containers for both services
-- OpenShift Routes for external access
-- Kustomize for environment-specific configuration
-- Separate dev and prod overlays
-- Quay.io as container registry
-- OpenShift Security Context Constraints (SCC) compatible
+**Key Components**:
+- `AppLayout/AppLayout.tsx` - Main layout with PatternFly Masthead (header) and PageSidebar (collapsible navigation)
+- `Dashboard/Dashboard.tsx` - Example page with health check integration
+- `routeConfig.tsx` - Central route configuration for navigation
 
-## Configuration Files
+**Design System**:
+- Uses PatternFly components (`@patternfly/react-core`, `@patternfly/react-icons`)
+- PatternFly Chatbot components available (`@patternfly/chatbot`)
+- Path alias `@app` → `frontend/src/app`
+- Path alias `@assets` → PatternFly assets
+- SVG support via `vite-plugin-svgr` (excludes PatternFly fonts/icons)
 
-### Environment Variables
-- `backend/.env` - Backend configuration (copy from .env.example)
-- `frontend/.env` - Frontend configuration (copy from .env.example)
+**API Communication**:
+- Axios for HTTP requests
+- Local dev: Vite proxy forwards `/api/*` to `http://localhost:8000` (vite.config.ts:30-35)
+- Production: Nginx proxy forwards `/api/*` to backend service (nginx.conf)
 
-### Key Configuration
-- `vite.config.ts` - Vite configuration with proxy to backend
-- `docker-compose.yml` - Local development with containers
-- `k8s/base/kustomization.yaml` - Base Kubernetes resources
-- `k8s/overlays/*/kustomization.yaml` - Environment-specific configs
+**Production Build**:
+- Multi-stage Dockerfile: Node 22 Alpine → Nginx Alpine
+- Nginx serves static files and proxies `/api/` routes
+- Optimized for OpenShift (non-root user, proper permissions)
+
+### Backend (FastAPI with Versioned API)
+
+**Stack**: Python 3.11, FastAPI, Uvicorn, Pydantic Settings, Anthropic SDK
+
+**Package Management**: UV package manager for fast, reliable dependency management
+
+**API Architecture** (nested routers):
+```
+main.py → /api → api/router.py → /v1 → routes/v1/router.py → /utils → health.py
+```
+
+Results in endpoint: `GET /api/v1/utils/health-check`
+
+**Key Files**:
+- `main.py` - FastAPI app setup, CORS middleware, includes `/api` router
+- `app/api/router.py` - Mounts v1 router at `/api/v1`
+- `app/api/routes/v1/router.py` - Mounts utils router at `/api/v1/utils`
+- `app/api/routes/v1/utils/health.py` - Health check endpoint
+
+**Adding New Endpoints**:
+1. Create new route file in `app/api/routes/v1/`
+2. Create router and define endpoints
+3. Include router in `app/api/routes/v1/router.py`
+
+Example:
+```python
+# app/api/routes/v1/foo/bar.py
+from fastapi import APIRouter
+router = APIRouter()
+
+@router.get("/baz")
+async def get_baz():
+    return {"result": "baz"}
+
+# app/api/routes/v1/router.py
+from .foo.bar import router as bar_router
+router.include_router(bar_router, prefix="/foo")
+# Results in: GET /api/v1/foo/baz
+```
+
+**CORS Configuration**:
+- Allows origins: `http://localhost:8080`, `http://localhost:5173`
+- Configured in main.py:14-20
+
+### Deployment (OpenShift/Kubernetes)
+
+**Kustomize Structure**:
+- `k8s/base/` - Base resources (deployments, services, routes)
+- `k8s/overlays/dev/` - Development patches (namespace: patternfly-fastapi-dev, image tag: latest)
+- `k8s/overlays/prod/` - Production patches (namespace: patternfly-fastapi-prod, image tag: prod)
+
+**Security**:
+- Runs as non-root user (both containers)
+- Security contexts configured for OpenShift SCC compatibility
+- Health probes configured (backend: `/api/v1/utils/health-check`, frontend: `/`)
+
+**Routes**:
+- Frontend: TLS edge termination
+- Backend: TLS edge termination
+- Both exposed via OpenShift Routes (see `k8s/base/route.yaml`)
 
 ## API Endpoints
 
-The FastAPI backend provides:
-- `GET /` - Root endpoint  
-- `GET /api/health` - Health check endpoint
+Current endpoints:
+- `GET /` - Root endpoint (returns API metadata)
+- `GET /api/v1/utils/health-check` - Health check endpoint
 
-## Development Workflow
+Frontend calls health check at: `frontend/src/app/Dashboard/Dashboard.tsx:16`
 
-1. Make changes to frontend (React) or backend (FastAPI)
-2. Test locally with `make dev`
-3. Build everything with `make build`
-4. Build and push containers with `make build && make push`
-5. Deploy to OpenShift with `make deploy` or `make deploy-prod`
+## Key Configuration
+
+- `frontend/vite.config.ts` - Vite dev server (port 8080), proxy `/api` to backend, path aliases
+- `frontend/nginx.conf` - Production proxy: `/api/` → `http://backend-service:8000/api/`
+- `backend/main.py` - FastAPI setup, CORS for local dev ports
+- `backend/pyproject.toml` - Python dependencies managed by uv
+- `k8s/base/kustomization.yaml` - Image registry and tags
+- `k8s/overlays/*/kustomization.yaml` - Environment-specific namespaces and image tags
 
 ## Common Tasks
 
 ### Adding New Dependencies
 - Frontend: `cd frontend && npm install <package>`
 - Backend: `cd backend && uv add <package>` (automatically updates pyproject.toml and uv.lock)
-
-### Updating Container Images
-- Update image tags in `k8s/base/kustomization.yaml`
-- Update tags in overlay files for environment-specific versions
-
-### Customizing for New Projects
-- Update image names in kustomization files
-- Update registry in build script
-- Add API endpoints in `backend/main.py`
-- Update frontend components in `frontend/src/`
-- The template provides a minimal foundation - add your business logic as needed
 
 ## Git Commit Guidelines
 

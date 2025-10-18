@@ -1,12 +1,13 @@
 # PatternFly FastAPI Template
 
-A full-stack application template with React frontend (Vite) using PatternFly and FastAPI backend, ready for deployment to OpenShift.
+A web application template with React frontend using PatternFly design system and FastAPI REST API backend, ready for deployment to OpenShift.
 
 ## Architecture
 
-- **Frontend**: React with TypeScript and Vite - simple UI with health check button
-- **Backend**: FastAPI with Python - minimal API with health check endpoint
-- **Containerization**: Docker and Docker Compose
+- **Frontend**: React 18 with TypeScript, PatternFly 6.x, and Vite - UI with navigation, dashboard, and settings pages
+- **Backend**: FastAPI with Python 3.11 - versioned REST API (`/api/v1/...`)
+- **Package Management**: UV for Python, npm for Node.js
+- **Containerization**: Docker (or Podman)
 - **Deployment**: OpenShift with Kustomize
 - **Container Registry**: Quay.io
 - **API Routing**: Vite proxy for local development, Nginx proxy for production
@@ -17,9 +18,10 @@ A full-stack application template with React frontend (Vite) using PatternFly an
 
 - Node.js 22+
 - Python 3.11+
-- Docker
-- OpenShift CLI (`oc`)
-- Kustomize
+- UV (Python package manager)
+- Docker or Podman
+- OpenShift CLI (`oc`) - for deployment
+- Kustomize - for deployment
 
 ### Local Development
 
@@ -56,8 +58,9 @@ make build
 
 ```
 ├── backend/              # FastAPI backend
+│   ├── app/api/routes/v1/ # Versioned API routes
 │   ├── main.py          # FastAPI application
-│   ├── requirements.txt # Python dependencies
+│   ├── pyproject.toml   # Python dependencies (managed by uv)
 │   ├── Dockerfile       # Backend container
 │   └── .env.example     # Environment variables
 ├── frontend/            # React frontend
@@ -71,10 +74,11 @@ make build
 │   └── overlays/       # Environment-specific configs
 │       ├── dev/        # Development environment
 │       └── prod/       # Production environment
-├── scripts/            # Deployment scripts
-│   ├── build-and-push.sh
-│   └── deploy.sh
-└── docker-compose.yml  # Local development with Docker
+└── scripts/            # Build and deployment scripts
+    ├── build-images.sh
+    ├── push-images.sh
+    ├── deploy.sh
+    └── undeploy.sh
 ```
 
 ## Deployment
@@ -92,6 +96,9 @@ make build-prod
 
 # Build with specific tag and registry
 make build TAG=v1.0.0 REGISTRY=quay.io/cfchase
+
+# Use podman instead of docker
+make build CONTAINER_TOOL=podman
 
 # Push images (must build first, default tag: latest)
 make push
@@ -139,7 +146,7 @@ Make sure to build and push with the correct tag before deploying.
 
 3. **Deploy to development**:
    ```bash
-   make deploy-dev
+   make deploy
    # or: ./scripts/deploy.sh dev
    ```
 
@@ -184,16 +191,16 @@ VITE_API_URL=http://localhost:8000
 
 The backend provides the following endpoints:
 
-- `GET /` - Root endpoint
-- `GET /api/health` - Health check endpoint
+- `GET /` - Root endpoint (API metadata)
+- `GET /api/v1/utils/health-check` - Health check endpoint
 
 ## Customization
 
 ### Update Container Registry
 
 1. Update image references in `k8s/base/kustomization.yaml`
-2. Update registry in `scripts/build-and-push.sh`
-3. Update image references in overlay files
+2. Update `REGISTRY` variable in Makefile or use `REGISTRY=your-registry make build`
+3. Update image references in overlay files if needed
 
 ### Add Environment Variables
 

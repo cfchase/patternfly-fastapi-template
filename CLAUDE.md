@@ -103,7 +103,7 @@ make undeploy              # Remove dev deployment
 
 ### Backend (FastAPI with Versioned API)
 
-**Stack**: Python 3.11, FastAPI, Uvicorn, Pydantic Settings, Anthropic SDK
+**Stack**: Python 3.11, FastAPI, Uvicorn, Pydantic Settings
 
 **Package Management**: UV package manager for fast, reliable dependency management
 

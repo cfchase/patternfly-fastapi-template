@@ -1,12 +1,19 @@
 import * as React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
+  Avatar,
   Button,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
   Masthead,
   MastheadBrand,
+  MastheadContent,
   MastheadLogo,
   MastheadMain,
   MastheadToggle,
+  MenuToggle,
+  MenuToggleElement,
   Nav,
   NavExpandable,
   NavItem,
@@ -15,9 +22,14 @@ import {
   PageSidebar,
   PageSidebarBody,
   SkipToContent,
+  Toolbar,
+  ToolbarContent,
+  ToolbarGroup,
+  ToolbarItem,
 } from '@patternfly/react-core';
 import { IAppRoute, IAppRouteGroup, routes } from '@app/routeConfig';
 import { BarsIcon } from '@patternfly/react-icons';
+import { useApp } from '@app/contexts/AppContext';
 
 interface IAppLayout {
   children: React.ReactNode;
@@ -25,6 +37,60 @@ interface IAppLayout {
 
 const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  const { currentUser, isLoadingUser, signOut } = useApp();
+
+  const onUserMenuToggle = () => {
+    setIsUserMenuOpen(!isUserMenuOpen);
+  };
+
+  const onUserMenuSelect = () => {
+    setIsUserMenuOpen(false);
+  };
+
+  const userMenuItems = (
+    <DropdownList>
+      <DropdownItem key="sign-out" onClick={signOut}>
+        Sign out
+      </DropdownItem>
+    </DropdownList>
+  );
+
+  const headerToolbar = (
+    <Toolbar id="toolbar" isFullHeight isStatic>
+      <ToolbarContent>
+        <ToolbarGroup
+          variant="action-group-plain"
+          align={{ default: 'alignEnd' }}
+          gap={{ default: 'gapNone', md: 'gapMd' }}
+        >
+          <ToolbarItem visibility={{ default: 'visible' }}>
+            {!isLoadingUser && currentUser && (
+              <Dropdown
+                isOpen={isUserMenuOpen}
+                onSelect={onUserMenuSelect}
+                onOpenChange={setIsUserMenuOpen}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={onUserMenuToggle}
+                    isFullHeight
+                    isExpanded={isUserMenuOpen}
+                    icon={<Avatar src="" alt={currentUser.display_name} size="sm" />}
+                  >
+                    {currentUser.display_name}
+                  </MenuToggle>
+                )}
+              >
+                {userMenuItems}
+              </Dropdown>
+            )}
+          </ToolbarItem>
+        </ToolbarGroup>
+      </ToolbarContent>
+    </Toolbar>
+  );
+
   const masthead = (
     <Masthead>
       <MastheadMain>
@@ -83,6 +149,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
           </MastheadLogo>
         </MastheadBrand>
       </MastheadMain>
+      <MastheadContent>{headerToolbar}</MastheadContent>
     </Masthead>
   );
 
@@ -90,11 +157,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
 
   const renderNavItem = (route: IAppRoute, index: number) => (
     <NavItem key={`${route.label}-${index}`} id={`${route.label}-${index}`} isActive={route.path === location.pathname}>
-      <NavLink
-        to={route.path}
-      >
-        {route.label}
-      </NavLink>
+      <NavLink to={route.path}>{route.label}</NavLink>
     </NavItem>
   );
 
@@ -113,7 +176,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     <Nav id="nav-primary-simple">
       <NavList id="nav-list-simple">
         {routes.map(
-          (route, idx) => route.label && (!route.routes ? renderNavItem(route, idx) : renderNavGroup(route, idx)),
+          (route, idx) => route.label && (!route.routes ? renderNavItem(route, idx) : renderNavGroup(route, idx))
         )}
       </NavList>
     </Nav>
@@ -140,12 +203,7 @@ const AppLayout: React.FunctionComponent<IAppLayout> = ({ children }) => {
     </SkipToContent>
   );
   return (
-    <Page
-      mainContainerId={pageId}
-      masthead={masthead}
-      sidebar={sidebarOpen && Sidebar}
-      skipToContent={PageSkipToContent}
-    >
+    <Page mainContainerId={pageId} masthead={masthead} sidebar={sidebarOpen && Sidebar} skipToContent={PageSkipToContent}>
       {children}
     </Page>
   );

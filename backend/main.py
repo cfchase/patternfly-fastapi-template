@@ -1,19 +1,29 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-import os
+
 from app.api.router import router as api_router
+from app.core.config import settings
+from app.core.logging import setup_logging, get_logger
+from app.core.middleware import RequestLoggingMiddleware
+
+# Setup logging before creating the app
+setup_logging()
+logger = get_logger(__name__)
 
 app = FastAPI(
-    title="React FastAPI Template API",
+    title=settings.APP_NAME,
     description="A template API built with FastAPI",
-    version="1.0.0"
+    version=settings.APP_VERSION,
 )
+
+# Add request logging middleware
+app.add_middleware(RequestLoggingMiddleware)
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://localhost:5173"],  # React dev servers
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,10 +32,26 @@ app.add_middleware(
 # Include API routes
 app.include_router(api_router, prefix="/api")
 
+
 @app.get("/")
 async def root():
-    return {"message": "React FastAPI Template API"}
+    return {"message": f"{settings.APP_NAME} API"}
+
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info(f"Starting {settings.APP_NAME} in {settings.ENVIRONMENT} mode")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info(f"Shutting down {settings.APP_NAME}")
+
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run(
+        "main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=settings.is_development,
+    )

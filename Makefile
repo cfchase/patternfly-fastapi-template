@@ -3,10 +3,12 @@
 # Container Registry Operations
 REGISTRY ?= quay.io/cfchase
 TAG ?= latest
-CONTAINER_TOOL ?= docker
+
+# Auto-detect container tool (check which daemon is actually running, podman preferred)
+CONTAINER_TOOL ?= $(shell if podman info >/dev/null 2>&1; then echo podman; elif docker info >/dev/null 2>&1; then echo docker; else echo docker; fi)
 
 
-.PHONY: help setup dev build build-prod test clean push push-prod deploy deploy-prod undeploy undeploy-prod kustomize kustomize-prod
+.PHONY: help setup setup-ci dev build build-prod test test-frontend test-backend update-tests clean push push-prod deploy deploy-prod undeploy undeploy-prod kustomize kustomize-prod version bump-patch bump-minor bump-major sync-version lint typecheck
 
 # Default target
 help: ## Show this help message
@@ -19,14 +21,21 @@ setup: ## Install all dependencies
 	@echo "Installing frontend dependencies..."
 	cd frontend && npm install
 	@echo "Installing backend dependencies..."
-	cd backend && uv sync
+	cd backend && uv sync --extra dev
 	@echo "Setup complete!"
 
 setup-frontend: ## Install frontend dependencies only
 	cd frontend && npm install
 
 setup-backend: ## Install backend dependencies only
-	cd backend && uv sync
+	cd backend && uv sync --extra dev
+
+setup-ci: ## Install all dependencies for CI (uses npm ci for reproducible builds)
+	@echo "Installing frontend dependencies (CI mode)..."
+	cd frontend && npm ci
+	@echo "Installing backend dependencies..."
+	cd backend && uv sync --extra dev
+	@echo "CI setup complete!"
 
 # Development
 dev: ## Run both frontend and backend in development mode
@@ -52,29 +61,33 @@ build-prod: build-frontend ## Build frontend and container images for production
 	./scripts/build-images.sh prod $(REGISTRY) $(CONTAINER_TOOL)
 
 # Testing
-test: ## Run all tests (frontend and backend)
+test: test-frontend test-backend ## Run all tests (frontend and backend)
+
+test-frontend: lint ## Run frontend linting, type checking, and tests
+	@echo "Running TypeScript type checking..."
+	cd frontend && npx tsc --noEmit
 	@echo "Running frontend tests..."
 	cd frontend && npm run test
+
+test-backend: ## Run backend tests (use VERBOSE=1, COVERAGE=1, FILE=path as needed)
+	@echo "Syncing backend dependencies..."
+	@cd backend && uv sync --extra dev
 	@echo "Running backend tests..."
-	cd backend && uv run pytest
+	@PYTEST_ARGS=""; \
+	if [ "$(VERBOSE)" = "1" ]; then PYTEST_ARGS="$$PYTEST_ARGS -v"; fi; \
+	if [ "$(COVERAGE)" = "1" ]; then PYTEST_ARGS="$$PYTEST_ARGS --cov=app --cov-report=term-missing"; fi; \
+	if [ -n "$(FILE)" ]; then PYTEST_ARGS="$$PYTEST_ARGS $(FILE)"; fi; \
+	cd backend && uv run pytest $$PYTEST_ARGS
 
-test-frontend: ## Run frontend tests
-	cd frontend && npm run test
-
-test-backend: ## Run backend tests
-	cd backend && uv run pytest
-
-test-backend-verbose: ## Run backend tests with verbose output
-	cd backend && uv run pytest -v
-
-test-backend-coverage: ## Run backend tests with coverage
-	cd backend && uv run pytest --cov=app --cov-report=term-missing
-
-test-backend-watch: ## Run backend tests in watch mode
-	cd backend && uv run pytest --watch
+update-tests: ## Update frontend test snapshots
+	@echo "Updating frontend test snapshots..."
+	cd frontend && npm run test -- --update
 
 lint: ## Run linting on frontend
 	cd frontend && npm run lint
+
+typecheck: ## Run TypeScript type checking on frontend
+	cd frontend && npm run typecheck
 
 push: ## Push container images to registry
 	@echo "Pushing images to $(REGISTRY) with tag $(TAG) using $(CONTAINER_TOOL)..."
@@ -137,4 +150,20 @@ fresh-start: clean setup env-setup ## Clean setup for new development
 	@echo "Fresh development environment ready!"
 
 quick-start: setup env-setup dev ## Quick start for development
+
+# Version Management
+version: ## Show current version
+	@cat VERSION
+
+bump-patch: ## Bump patch version (1.0.0 → 1.0.1)
+	./scripts/bump-version.sh patch
+
+bump-minor: ## Bump minor version (1.0.0 → 1.1.0)
+	./scripts/bump-version.sh minor
+
+bump-major: ## Bump major version (1.0.0 → 2.0.0)
+	./scripts/bump-version.sh major
+
+sync-version: ## Sync VERSION to package.json and pyproject.toml
+	./scripts/sync-version.sh
 
